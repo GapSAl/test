@@ -1,0 +1,160 @@
+# test
+kinopoisk
+create database new_kinopoisk;
+
+create extension if not exists "uuid-ossp";
+
+create table personal_account
+(id uuid not null primary key,
+first_name varchar, 
+last_name varchar, 
+phone varchar, 
+email varchar, 
+address varchar, 
+create_at date, 
+confirmed  boolean,
+balance real);
+
+insert into personal_account
+values
+(uuid_generate_v4(), 'Mikle', 'Politaev', '+79603856137', 'kdhik@mail.ru', 'г. Ярославль ул. Набережная д.89', '19.06.2022', 'No', 29.7),
+(uuid_generate_v4(), 'Oleg', 'Pirogov', '+79607391743', 'fglkldfs@mail.ru', 'г. Тверь ул. Южная д.74', '17.09.2017', 'Yes', 92.8),
+(uuid_generate_v4(), 'Andrey', 'Krupov', '+79607342382', 'dfkjhdfgk@mail.ru', 'г. Кострома ул. Белая д.19', '16.05.2019', 'Yes', 48.9),
+(uuid_generate_v4(), 'Sonya', 'Sokolova', '+79603672843', 'dfkgjhf@mail.ru', 'г. Архангельск ул. Святая д. 85', '11.03.2017', 'No', 45.9),
+(uuid_generate_v4(), 'Anton', 'Maksimov', '+79605192854', 'fgljfgkdfkl@mail.ru', 'г. Нижный Новгород ул. Верхняя д.37', '04.03.2018', 'No', 29.9);
+
+create table movies
+(id uuid not null primary key,
+movie_name varchar, 
+length time, 
+release date, 
+description text,
+reviews_audience text);
+
+insert into movies 
+values
+(uuid_generate_v4(), 'The Social Network', '01:32', '14.01.2010', 'Niki and her friends go to an exotic
+island in the Pacific Ocean to go kayaking and diving. But the girls are being chased
+by a huge sea monster, and now they will have to face their fears face to face', (select id from personal_account where phone = '+79603856137')),
+(uuid_generate_v4(), 'The Hangover', '02:06', '02.05.2022', 'Doctor Strange, with the help of 
+Wong, saves a teenage girl named America Chavez from a giant octopus, who, with a strong fright, can open
+portals to parallel universes. Trying to protect a new acquaintance from an evil force eager to get her 
+ability, the Doctor, along with America, embarks on a journey through the multiverse', (select id from personal_account where phone = '+79607342382')),
+(uuid_generate_v4(), 'Forrest Gump', '01:38', '21.07.2022', 'Hank is a brave dog who dreams of becoming a 
+samurai, but no one takes him seriously in the city of cats. But when an army of furry ninjas threatens 
+to wipe their town off the face of the Earth, Hank becomes the only hope for salvation. Now he must master 
+the skills of a great warrior in a short time. This is the only way he will have a chance to win', (select id from personal_account where phone = '+79603672843')),
+(uuid_generate_v4(), 'The Break-UP', '01:35', '7.07.2022', 'Tanya Babanina from Protvino near Moscow masterfully bakes and dreams of her 
+cafe. But to fulfill a dream, they say, you need to get out of your comfort zone. And Tanya goes out on an 
+international scale, having found crazy adventures for her buns. One in Sri Lanka. Without money, documents 
+and a husband who cheated on her right after the wedding. But with a hangover, in a winter coat and ... 
+under the same roof with three guys who are not happy with her at all', (select id from personal_account where phone = '+79605192854')),
+(uuid_generate_v4(), 'Toy Story', '01:38', '21.07.2022', 'Hank is a brave dog who dreams of becoming a 
+samurai, but no one takes him seriously in the city of cats. But when an army of furry ninjas threatens 
+to wipe their town off the face of the Earth, Hank becomes the only hope for salvation. Now he must master 
+the skills of a great warrior in a short time. This is the only way he will have a chance to win', 'A normal cartoon that children are likely to like, 
+and adults will smile several times. However, it is not possible to take out something important after viewing 
+the tape', (select id from personal_account where phone = '+79607391743')),;
+
+create sequence directory_id;
+
+create table directory
+(id int not null default nextval('directory_id') primary key,
+movie_name_id uuid references movies(id), 
+genre varchar, 
+actor varchar, 
+producer varchar,
+rating real,
+country varchar);
+
+insert into directory (movie_name_id, genre, actor, producer, rating, country)
+values
+((select id from movies where movie_name = 'The Social Network'), 'fantastic', 'Steven_Spielberg', 'John Christian', 3.3, 'Australia'),
+((select id from movies where movie_name = 'The Hangover'), 'horrors', 'Morgan_Freeman', 'Victoria Alonso', 5.6, 'USA'),
+((select id from movies where movie_name = 'Toy Story'), 'comedy', 'Denzel_Washington', 'Andrey Lyakhov', 7.0, 'USA'),
+((select id from movies where movie_name = 'Forrest Gump'), 'cartoon', 'Harrison_Ford', 'Yair Landau', 8.5, 'Great Britain'),
+((select id from movies where movie_name = 'The Break-UP'), 'drama', 'Robin_Williams', 'Oleg Asadulin', 9.6, 'USA');
+
+create sequence cinema_id;
+
+create table cinema
+(id uuid not null primary key,
+movie_name_id uuid references movies(id), 
+name_cinema varchar,
+date_session date,
+time_session time);
+
+insert into cinema
+values
+(uuid_generate_v4(), (select id from movies where movie_name = 'The Social Network'), 'А113', '14.01.2010', '12:40'),
+(uuid_generate_v4(), (select id from movies where movie_name = 'The Hangover'), 'А113', '14.01.2010', '12:20'),
+(uuid_generate_v4(), (select id from movies where movie_name = 'Toy Story'), 'А113', '14.01.2010', '13:00'),
+(uuid_generate_v4(), (select id from movies where movie_name = 'Forrest Gump'), 'Europe Cinema', '14.01.2010', '13:55'),
+(uuid_generate_v4(), (select id from movies where movie_name = 'The Break-UP'), 'Lodz', '14.01.2010', '16:50');
+
+create sequence subscription_id;
+
+create table subscription
+(id int not null default nextval('subscription_id') primary key,
+user_id uuid references personal_account(id), 
+movie_name_id uuid references movies(id),
+confirmed boolean,
+subscription_period serial,
+payment boolean);
+
+
+insert into subscription (user_id, movie_name_id, confirmed, subscription_period, payment)
+values
+((select id from personal_account where phone = '+79605192854'), (select id from movies where movie_name = 'The Social Network'), 'Yes', 30, 'No'),
+((select id from personal_account where phone = '+79603672843'), (select id from movies where movie_name = 'The Hangover'), 'Yes', 365, 'Yes'),
+((select id from personal_account where phone = '+79607342382'), (select id from movies where movie_name = 'Toy Story'), 'No', 30, 'No'),
+((select id from personal_account where phone = '+79607391743'), (select id from movies where movie_name = 'Forrest Gump'), 'Yes', 365, 'Yes'),
+((select id from personal_account where phone = '+79603856137'), (select id from movies where movie_name = 'The Break-UP'), 'No', 30, 'No');
+
+select * from subscription;
+
+create sequence news_id;
+
+create table news
+(id int not null default nextval('news_id') primary key,
+roller_id uuid references movies(id),
+name_news varchar, 
+description_news text,
+comments_news text,
+comments_news_id uuid references movies(id),
+comments_user_id uuid references personal_account(id));
+
+insert into news (roller_id, name_news, description_news, comments_news, comments_news_id, comments_user_id)
+values
+((select id from movies where movie_name = 'The Social Network'), 'A shark hunts a group of girls in the trailer for the thriller 
+"Open Sea: Monster of the Deep"', 'Capella Film has unveiled the trailer for the Australian survival thriller "The High 
+Seas: Monster of the Deep," which is a sequel to the 2010 film "The High Seas: New Victims."', 'It cannot be said that 
+"The Open Sea: The Monster of the Deep" is a breakthrough in zoohorrors or a new word in a series of shark horror stories. 
+But it is nice to look at something realistic, simple and frightening. The very thing for the viewer tired of intricate blockbusters',
+(select id from movies where movie_name = 'The Social Network'), (select id from personal_account where phone = '9605192854')),
+((select id from movies where movie_name = 'The Hangover'), 'The 5 Scariest Scenes in Doctor Strange 2: How 
+Marvel Got a Bloody Horror', '5th place: The murder of America Chavez is parents, 4th place: The destruction of Kamar-Taj, 
+3rd place: The brutal massacre of the Illuminati, 2nd place: The Final of Wanda, 1st place: The revived corpse of Strange', 'The film 
+turned out to be weak, as in the proverb - The mountain gave birth to a mouse. Compared to the same last spider, it is very sluggish
+and uninteresting', (select id from movies where movie_name = 'The Hangover'), (select id from personal_account where phone = '+79603672843')),
+((select id from movies where movie_name = 'Toy Story'), 'What is happening at the box office: the records of "One" in Russia and "Top Ghana" in 
+the world', 'In Russia over the past two weeks, the leader of the box office has remained unchanged - the thriller "Odin". Dmitry Suvorov is 
+painting earned 174 million over three weekends. This is an unprecedented result for a Russian release at the July box office',
+(select id from movies where movie_name = 'Toy Story'), (select id from personal_account where phone = '+79607342382')),
+((select id from movies where movie_name = 'Forrest Gump'), 'Two trailers of the cartoon "Forrest Gump" have 
+been released', 'Paramount Studio and Nickelodeon TV channel presented two trailers of an animated comedy film at once, work on which has been 
+carried out over the past decade. The videos make it clear that the audience is waiting for an entertaining cartoon in the Japanese entourage 
+with a lot of references to famous films', (select id from movies where movie_name = 'Forrest Gump'), (select id from personal_account where phone = '+79607391743')),
+((select id from movies where movie_name = 'The Break-UP'), 'What is happening at the box office: the Russian audience is tired of comedies', 'In July, 
+the fees of Russian cinemas continued to decline: revenue for the last two weekends did not even reach 150 million rubles. The reason is 
+the lack of new products designed for the widest possible audience', 'The trouble is in the Russian producer cinema, which in fact is not a 
+producer cinema, but a bureaucratic one.  Decisions are made by people far from creativity, trying to calculate success - instead of trying 
+to make a movie at a decent artistic level, but for current producers these are already forgotten concepts', (select id from movies where movie_name = 'The Break-UP'), (select id from personal_account where phone = '+79603856137'));
+
+select directory.id, directory.movie_name_id, directory.genre, directory.actor, directory.producer, 
+directory.rating, directory.country,
+movies.id as movie_name_id, movies.movie_name, movies.length, movies.release, 
+movies.description, movies.reviews_audience
+from directory
+right join movies on directory.movie_name_id = movies.id;
+
